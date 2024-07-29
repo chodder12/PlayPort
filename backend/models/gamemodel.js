@@ -11,14 +11,7 @@ const gameSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   discount: { type: Number, default: 0 }, // Optional discount field
   rating: { type: Number, min: 0, max: 10 },
-  reviews: [
-    {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      rating: { type: Number, min: 0, max: 5 },
-      comment: { type: String },
-      date: { type: Date, default: Date.now },
-    },
-  ],
+  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }], // Reference to Review documents,
   image: { type: String, required: true },
   trailer: { type: String },
   systemRequirements: {

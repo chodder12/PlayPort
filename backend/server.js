@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const Game = require('./models/gamemodel');
+const Review = require('./models/reviewmodel'); // Adjust the path as necessary
+
 
 dotenv.config();
 
@@ -17,6 +19,8 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
+
+/* create read update and delete functions for games*/ 
 
 //creates a new game
 app.post('/api/games', async (req, res) => {
@@ -142,6 +146,80 @@ app.post('/api/games/edit', async (req, res) => {
         res.status(500).send('Server error - error updating game');
     }
 });
+
+// Creates a new review for a specific game by title
+app.post('/api/games/reviews/:title', async (req, res) => {
+    try {
+        const { userId, rating, comment } = req.body;
+        const { title } = req.params;
+
+
+        if (rating === undefined) {
+            return res.status(400).json({ msg: 'Rating is required' });
+        }
+        
+        const titleRegex = new RegExp(`${title}`, 'i');
+
+        
+
+        // Find the game by title
+        const game = await Game.findOne({ title: titleRegex });
+
+
+        if (!game) {
+            return res.status(404).json({ msg: 'Game not found' });
+        }
+
+        console.log('Game found:', game);
+
+        // Create a new review
+        const newReview = new Review({
+            user: userId,
+            game: game._id,
+            rating,
+            comment,
+        });
+
+        // Save the review
+        const savedReview = await newReview.save();
+
+        res.status(201).json({ title: game.title, review: savedReview });
+    } catch (error) {
+        console.error('Error creating review:', error.message);
+        res.status(500).send('Server error - error creating review');
+    }
+});
+
+
+
+
+
+// Get all reviews for a specific game by its title
+app.get('/api/games/reviews/:title', async (req, res) => {
+    try {
+        const { title } = req.params;
+
+        const titleRegex = new RegExp(`^${title}$`, 'i'); // Exact match with case-insensitivity
+
+        // Find the game by title
+        const game = await Game.findOne({ title: titleRegex });
+
+        if (!game) {
+            return res.status(404).json({ msg: 'Game not found' });
+        }
+
+        // Find all reviews for the game
+        const reviews = await Review.find({ game: game._id }).populate('user', 'name'); // Adjust the fields as necessary
+
+        res.status(200).json(reviews);
+    } catch (error) {
+        console.error('Error retrieving reviews:', error.message);
+        res.status(500).send('Server error - error retrieving reviews');
+    }
+});
+
+
+
 
 
 
